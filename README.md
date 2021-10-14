@@ -1,5 +1,6 @@
-go build main.go
-./main serve
+go build main.
+
+go ./main serve
 
 
 docker build .-t pricefeeder:latest
