@@ -1,0 +1,5 @@
+pricefeeder:
+  expose_address: ":8080"
+
+prometheus:
+  port: ":2112"
