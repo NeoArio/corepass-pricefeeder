@@ -44,6 +44,8 @@ func serve(cmd *cobra.Command, args []string) {
 	priceFeederApiServer := http.NewServeMux()
 	priceFeederApiServer.HandleFunc("/", http.NotFound)
 	priceFeederApiServer.HandleFunc("/health_check", controller.HealthCheckHandle)
+	priceFeederApiServer.HandleFunc("/get", controller.GetSimpleStorage)
+	priceFeederApiServer.HandleFunc("/set", controller.SetSimpleStorage)
 	exposeAddress := viper.GetString("pricefeeder.expose_address")
 
 	fmt.Println("start priceFeeder API Server on " + exposeAddress)
