@@ -45,7 +45,9 @@ func serve(cmd *cobra.Command, args []string) {
 	priceFeederApiServer.HandleFunc("/", http.NotFound)
 	priceFeederApiServer.HandleFunc("/health_check", controller.HealthCheckHandle)
 	priceFeederApiServer.HandleFunc("/get", controller.GetSimpleStorage)
+	priceFeederApiServer.HandleFunc("/core/get", controller.GetSimpleStorageCoreCoin)
 	priceFeederApiServer.HandleFunc("/set", controller.SetSimpleStorage)
+	priceFeederApiServer.HandleFunc("/core/set", controller.SetSimpleStorageCoreCoin)
 	exposeAddress := viper.GetString("pricefeeder.expose_address")
 
 	fmt.Println("start priceFeeder API Server on " + exposeAddress)

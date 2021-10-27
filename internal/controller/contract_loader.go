@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	store "github.com/NeoArio/corepass-pricefeeder/contracts" // for demo
+	"github.com/NeoArio/corepass-pricefeeder/contracts" // for demo
 )
 
 
@@ -23,7 +23,7 @@ func GetSimpleStorage(w http.ResponseWriter, req *http.Request) {
     }
 
     address := common.HexToAddress(core.SimpleStorageAddress)
-    instance, err := store.NewContracts(address, client)
+    instance, err := contracts.NewContracts(address, client)
     if err != nil {
         log.Fatal(err)
     }
