@@ -34,6 +34,7 @@ func GetSimpleStorageCoreCoin(w http.ResponseWriter, req *http.Request) {
 	ctx := context.Background()
 
 	opts := &bind.CallOpts{
+		From: address,
 		Context: ctx,
 	}
 

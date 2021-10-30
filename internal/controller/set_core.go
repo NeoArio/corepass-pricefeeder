@@ -2,67 +2,90 @@ package controller
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
 	"github.com/NeoArio/corepass-pricefeeder/internal/core"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/core-coin/go-core/accounts/abi/bind"
+	"github.com/core-coin/go-core/crypto"
+	eddsa "github.com/core-coin/go-goldilocks"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/core-coin/go-core/common"
+	"github.com/core-coin/go-core/xcbclient"
 
 	store "github.com/NeoArio/corepass-pricefeeder/contracts" // for demo
 )
 
 
 func SetSimpleStorageCoreCoin(w http.ResponseWriter, req *http.Request) {
-	client, err := ethclient.Dial("https://stg.pingextest.eu/xcb")
+
+	content, err := ioutil.ReadFile("/home/rasool/Downloads/ab832c70acf1a84bb8b2b5c06f67d21c8f31b056361c.wallet")
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	privateKey, err := crypto.HexToECDSA("cdac8f92ec2b559ba5821c1e52b6781f73e139b02aab2645a8ebdc0af506497c")
+	//private := string(content)
+
+	client, err := xcbclient.Dial("https://stg.pingextest.eu/xcb")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	publicKey := privateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		log.Fatal("error casting public key to ECDSA")
+
+	common.DefaultNetworkID = 3
+
+	//crypto.HexToECDSA(content)
+	//privateKey, err := crypto.HexToECDSA(private)
+	privateKey, err := crypto.ToEDDSA(content)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	pub := eddsa.Ed448DerivePublicKey(*privateKey)
+
+
+
+	//publicKey := privateKey.Public()
+	//publicKeyECDSA, ok := pub.(*ecdsa.PublicKey)
+	//if !ok {
+	//	log.Fatal("error casting public key to ECDSA")
+	//}
+
+	fromAddress := crypto.PubkeyToAddress(pub)
 	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gasPrice, err := client.SuggestGasPrice(context.Background())
+	gasPrice, err := client.SuggestEnergyPrice(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 
-	chainID, err := client.ChainID(context.Background())
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+	//chainID, err := client.ChainID(context.Background())
+	auth := bind.NewKeyedTransactor(privateKey)
 	if err != nil {
 		log.Fatal(err)
 	}
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)     // in wei
-	auth.GasLimit = uint64(300000) // in units
-	auth.GasPrice = gasPrice
+	auth.EnergyLimit = uint64(300000) // in units
+	auth.EnergyPrice = gasPrice
 
 
 
-	address := common.HexToAddress(core.SimpleStorageAddress)
-	instance, err := store.NewContracts(address, client)
+	address, err := common.HexToAddress(core.SimpleStorageAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	instance, err := store.NewSimple(address, client)
 	if err != nil {
 		log.Fatal(err)
 	}
