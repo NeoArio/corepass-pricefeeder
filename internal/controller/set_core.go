@@ -80,7 +80,7 @@ func SetSimpleStorageCoreCoin(w http.ResponseWriter, req *http.Request) {
 
 
 
-	address, err := common.HexToAddress(core.SimpleStorageAddress)
+	address, err := common.HexToAddress(core.SimpleStorageCoreAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
