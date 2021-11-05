@@ -68,5 +68,7 @@ func serve(cmd *cobra.Command, args []string) {
 			fmt.Println("While serving HTTP: ", httpError)
 		}
 	}()
+	go controller.EventSubscribe()
+
 	select {}
 }

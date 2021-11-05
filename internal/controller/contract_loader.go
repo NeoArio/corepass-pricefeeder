@@ -22,8 +22,8 @@ func GetSimpleStorage(w http.ResponseWriter, req *http.Request) {
         log.Fatal(err)
     }
 
-    address := common.HexToAddress(core.SimpleStorageAddress)
-    instance, err := contracts.NewContracts(address, client)
+    address := common.HexToAddress(core.SimpleStorageV2Address)
+    instance, err := contracts.NewSimpleevent(address, client)
     if err != nil {
         log.Fatal(err)
     }

@@ -9,17 +9,16 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"log"
-	"net/http"
 )
 
-func EventSubscribe(w http.ResponseWriter, req *http.Request) {
+func EventSubscribe() {
 
 	client, err := ethclient.Dial("wss://kovan.infura.io/ws/v3/8216411c128a4b5480fd2ee0e2771d7b")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	contractAddress := common.HexToAddress(core.SimpleStorageAddress)
+	contractAddress := common.HexToAddress(core.SimpleStorageV2Address)
 
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{contractAddress},

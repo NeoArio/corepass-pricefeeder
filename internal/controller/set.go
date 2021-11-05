@@ -61,8 +61,8 @@ func SetSimpleStorage(w http.ResponseWriter, req *http.Request) {
 
 
 
-	address := common.HexToAddress(core.SimpleStorageAddress)
-	instance, err := store.NewContracts(address, client)
+	address := common.HexToAddress(core.SimpleStorageV2Address)
+	instance, err := store.NewSimpleevent(address, client)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func SetSimpleStorage(w http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 	}
 
-	fmt.Println(version) // "1.0"
+	fmt.Println("storage = ",version) // "1.0"
 
 	json.NewEncoder(w).Encode(version)
 }
