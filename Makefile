@@ -27,7 +27,7 @@ compile-test:
 	- @echo "Tests Compiled"
 
 test: compile-test
-	- ./test-mediagatewayd
+	- ./test-pricefeederd
 	- @echo "Tests Run Finished"
 
 test-local: compile-test

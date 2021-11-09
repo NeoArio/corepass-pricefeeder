@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/NeoArio/corepass-pricefeeder/internal/controller"
 	"github.com/NeoArio/corepass-pricefeeder/internal/core"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"net/http"
@@ -37,10 +36,6 @@ func serve(cmd *cobra.Command, args []string) {
 
 	core.InitConfig()
 
-	prometheusServer := http.NewServeMux()
-	prometheusServer.Handle("/metrics", promhttp.Handler())
-	prometheusPort := viper.GetString("prometheus.port")
-
 	priceFeederApiServer := http.NewServeMux()
 	priceFeederApiServer.HandleFunc("/", http.NotFound)
 	priceFeederApiServer.HandleFunc("/health_check", controller.HealthCheckHandle)
@@ -51,9 +46,6 @@ func serve(cmd *cobra.Command, args []string) {
 	exposeAddress := viper.GetString("pricefeeder.expose_address")
 
 	fmt.Println("start priceFeeder API Server on " + exposeAddress)
-	fmt.Println("start Prometheus Server on " + prometheusPort)
-
-
 
 	go func() {
 		httpError := http.ListenAndServe(exposeAddress, priceFeederApiServer)
@@ -61,14 +53,6 @@ func serve(cmd *cobra.Command, args []string) {
 			fmt.Println("While serving HTTP: ", httpError)
 		}
 	}()
-
-	go func() {
-		httpError := http.ListenAndServe(prometheusPort, prometheusServer)
-		if httpError != nil {
-			fmt.Println("While serving HTTP: ", httpError)
-		}
-	}()
-	go controller.EventSubscribe()
 
 	select {}
 }
