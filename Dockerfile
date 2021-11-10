@@ -8,18 +8,6 @@ from  golang:1.15.6-buster
 # image that will hold our application source
 # files
 
-RUN apt update -y && apt upgrade -y
-
-# set if needed!
-ARG HTTP_PROXY=""
-ARG SWAGGER_VERSION=v0.27.0
-RUN set -ex \
- && export https_proxy=${HTTP_PROXY} http_proxy=${HTTP_PROXY} \
- && curl -o /usr/local/bin/swagger -L https://github.com/go-swagger/go-swagger/releases/download/${SWAGGER_VERSION}/swagger_linux_amd64 \
- && chmod +x /usr/local/bin/swagger \
- && unset https_proxy http_proxy
-
-
 RUN mkdir /app
 RUN mkdir /etc/mediagateway
 
@@ -32,10 +20,11 @@ ADD . /app
 # directory
 WORKDIR /app
 
-
-ENV SWAGGER_PORT 7000
-
-RUN swagger generate spec -o ./swagger.json
+ENV XCB_NODE_URL http://127.0.0.1:8545 \
+    NETWORK_ID 3
+    PRIVATE_KEY_BYTES test_key
+    PRICE_FEED_CONTRACT_ADDRESS ab47780c6900023b87dc6bfb66214c11ddcaae54205d
+    CTN_PRICE_API_ADDRESS https://stg.pingextest.eu/marketdata/instruments/btc_usd/history
 
 # we run go build to compile the binary
 # executable of our Go program

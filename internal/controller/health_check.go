@@ -7,8 +7,6 @@ import (
 
 func HealthCheckHandle(w http.ResponseWriter, req *http.Request) {
 
-	setHeaders(w)
-
 	var data = map[string]interface{}{
 		"status":  "up",
 		"code": 200,

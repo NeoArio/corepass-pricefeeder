@@ -24,7 +24,6 @@ func InitConfig() {
 
 	viper.SetDefault("price_feeder.service", "http://127.0.0.1")
 	viper.SetDefault("price_feeder.expose_address", ":80")
-	viper.SetDefault("prometheus.port", ":2112")
 
 	viper.SetDefault("network_id", "3")
 	viper.SetDefault("xcb_node_url", "http://127.0.0.1:8545")

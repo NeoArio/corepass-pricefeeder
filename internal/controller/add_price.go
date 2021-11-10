@@ -3,17 +3,19 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/NeoArio/corepass-pricefeeder/internal/core"
+	"errors"
+	"github.com/NeoArio/corepass-pricefeeder/internal/model"
 	"github.com/core-coin/go-core/accounts/abi/bind"
 	"github.com/core-coin/go-core/crypto"
 	eddsa "github.com/core-coin/go-goldilocks"
+	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"net/http"
-	"strconv"
+	"net/url"
+	"time"
 
 	"github.com/core-coin/go-core/common"
 	"github.com/core-coin/go-core/xcbclient"
@@ -22,10 +24,10 @@ import (
 )
 
 
-func SetSimpleStorageCoreCoin(w http.ResponseWriter, req *http.Request) {
-	client, err := xcbclient.Dial(viper.GetString("xcb_node_url"))
+func AddPrice() {
+	client, err := xcbclient.Dial(viper.GetString("XCB_NODE_URL"))
 	if err != nil {
-		log.Printf("error in Dialing to xcb node: %v", err)
+		log.Errorf("error in Dialing to xcb node: %v", err)
 		return
 	}
 
@@ -33,38 +35,41 @@ func SetSimpleStorageCoreCoin(w http.ResponseWriter, req *http.Request) {
 
 	privateKey, err := getPrivateKey()
 	if err != nil {
-		log.Printf("error in reading private key: %v", err)
+		log.Errorf("error in reading private key: %v", err)
 		return
 	}
 
 	fromAddress, err := computeFromAddress(privateKey)
 	if err != nil{
-		log.Printf("error in computeFromAddress: %v", err)
+		log.Errorf("error in computeFromAddress: %v", err)
 		return
 	}
 
 	signer, err := NewSigner(privateKey, client, fromAddress)
 	if err != nil {
-		log.Printf("error in creating signer: %v", err)
+		log.Errorf("error in creating signer: %v", err)
 		return
 	}
 
 	instance, err := NewPriceFeederInstance(client)
 	if err != nil{
-		log.Printf("error in creating contract instance: %v", err)
+		log.Errorf("error in creating contract instance: %v", err)
 		return
 	}
 
-	price := GetLatestPrice(req)
+	price, err := GetLatestPrice()
+	if err != nil{
+		log.Error(err)
+		return
+	}
 
-	transaction, err := instance.AddPrice(signer, price)
+	transaction, err := instance.AddPrice(signer, big.NewFloat(price))
 	if err != nil {
-		log.Printf("error in adding price: %v", err)
+		log.Errorf("error in adding price: %v", err)
 		return
 	}
 
-	fmt.Printf("%+v\n", *transaction) // "1.0"
-	json.NewEncoder(w).Encode(transaction)
+	log.Infof("%+v\n", *transaction)
 }
 
 func computeFromAddress(privateKey *eddsa.PrivateKey) (fromAddress common.Address, err error){
@@ -94,13 +99,13 @@ func NewSigner(privateKey *eddsa.PrivateKey, client *xcbclient.Client, fromAddre
 	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
 		log.Printf("error in computing nonce: %v", err)
-		return
+		return nil, err
 	}
 
 	energyPrice, err := client.SuggestEnergyPrice(context.Background())
 	if err != nil {
 		log.Printf("error in getting suggested energy price: %v", err)
-		return
+		return nil, err
 	}
 
 	signer = bind.NewKeyedTransactor(privateKey)
@@ -117,7 +122,7 @@ func NewSigner(privateKey *eddsa.PrivateKey, client *xcbclient.Client, fromAddre
 }
 
 func NewPriceFeederInstance(client *xcbclient.Client)(instance *store.PriceFeeder, err error){
-	address, err := common.HexToAddress(core.PriceFeedAddress)
+	address, err := common.HexToAddress(viper.GetString("PRICE_FEED_ADDRESS"))
 	if err != nil {
 		return nil, err
 	}
@@ -130,11 +135,35 @@ func NewPriceFeederInstance(client *xcbclient.Client)(instance *store.PriceFeede
 	return instance, nil
 }
 
-func GetLatestPrice(req *http.Request) *big.Int{
-	n := req.FormValue("number")
-	number, _ := strconv.Atoi(n)
+func GetLatestPrice() (price float64, err error){
+	APIAddress := viper.GetString("CTN_PRICE_API_ADDRESS")
 
-	price := big.NewInt(int64(number))
+	startDate := time.Now().AddDate(-1,0,0).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
 
-	return price
+	urlParams := url.Values{"startDate": {startDate}, "endDate": {endDate}, "count": {"1"}}
+
+	googleClient := pester.New()
+	googleClient.Concurrency = 1
+	googleClient.MaxRetries = 0
+	googleClient.Timeout = 10 * time.Second
+
+	req, _ := http.NewRequest("GET", APIAddress + "?" + urlParams.Encode(), nil)
+	resp, err := googleClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	var CTNTrades model.CTNTrades
+	if err := json.NewDecoder(resp.Body).Decode(&CTNTrades); err != nil {
+		return 0, err
+	}
+
+	if len(CTNTrades.Data)>0{
+		price = CTNTrades.Data[0].Close
+		return price, nil
+	} else{
+		return 0, errors.New("response is empty")
+	}
 }

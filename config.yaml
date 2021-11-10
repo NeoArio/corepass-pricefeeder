@@ -1,5 +1,4 @@
 pricefeeder:
   expose_address: ":8080"
 
-prometheus:
-  port: ":2112"
+CTN_PRICE_API_ADDRESS: https://stg.pingextest.eu/marketdata/instruments/btc_usd/history

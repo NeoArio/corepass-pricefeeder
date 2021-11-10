@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/NeoArio/corepass-pricefeeder/internal/controller"
 	"github.com/NeoArio/corepass-pricefeeder/internal/core"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"net/http"
+	"time"
 )
 
 // serve command
@@ -39,10 +41,7 @@ func serve(cmd *cobra.Command, args []string) {
 	priceFeederApiServer := http.NewServeMux()
 	priceFeederApiServer.HandleFunc("/", http.NotFound)
 	priceFeederApiServer.HandleFunc("/health_check", controller.HealthCheckHandle)
-	priceFeederApiServer.HandleFunc("/get", controller.GetSimpleStorage)
 	priceFeederApiServer.HandleFunc("/core/get", controller.GetSimpleStorageCoreCoin)
-	priceFeederApiServer.HandleFunc("/set", controller.SetSimpleStorage)
-	priceFeederApiServer.HandleFunc("/core/set", controller.SetSimpleStorageCoreCoin)
 	exposeAddress := viper.GetString("pricefeeder.expose_address")
 
 	fmt.Println("start priceFeeder API Server on " + exposeAddress)
@@ -54,5 +53,9 @@ func serve(cmd *cobra.Command, args []string) {
 		}
 	}()
 
-	select {}
+	select {
+	case <-time.After(time.Minute * 10):
+		log.Info("Add price process started...")
+		controller.AddPrice()
+	}
 }
