@@ -63,7 +63,9 @@ func AddPrice() {
 		return
 	}
 
-	transaction, err := instance.AddPrice(signer, big.NewFloat(price))
+	bigIntPrice := ConvertFloatToBigInt(price)
+
+	transaction, err := instance.AddPrice(signer, bigIntPrice)
 	if err != nil {
 		log.Errorf("error in adding price: %v", err)
 		return
@@ -143,13 +145,13 @@ func GetLatestPrice() (price float64, err error){
 
 	urlParams := url.Values{"startDate": {startDate}, "endDate": {endDate}, "count": {"1"}}
 
-	googleClient := pester.New()
-	googleClient.Concurrency = 1
-	googleClient.MaxRetries = 0
-	googleClient.Timeout = 10 * time.Second
+	client := pester.New()
+	client.Concurrency = 1
+	client.MaxRetries = 0
+	client.Timeout = 10 * time.Second
 
 	req, _ := http.NewRequest("GET", APIAddress + "?" + urlParams.Encode(), nil)
-	resp, err := googleClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return 0, err
 	}
@@ -166,4 +168,10 @@ func GetLatestPrice() (price float64, err error){
 	} else{
 		return 0, errors.New("response is empty")
 	}
+}
+
+func ConvertFloatToBigInt(number float64) *big.Int{
+	bigInt := big.NewInt(int64(number * 1000000))
+	bigInt.Mul(bigInt, big.NewInt(1000000000000))
+	return bigInt
 }

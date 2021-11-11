@@ -24,9 +24,10 @@ func InitConfig() {
 
 	viper.SetDefault("price_feeder.service", "http://127.0.0.1")
 	viper.SetDefault("price_feeder.expose_address", ":80")
-
-	viper.SetDefault("network_id", "3")
-	viper.SetDefault("xcb_node_url", "http://127.0.0.1:8545")
+	viper.SetDefault("NETWORK_ID", "3")
+	viper.SetDefault("XCB_NODE_URL", "http://127.0.0.1:8545")
+	viper.SetDefault("PRICE_FEED_CONTRACT_ADDRESS", "ab47780c6900023b87dc6bfb66214c11ddcaae54205d")
+	viper.SetDefault("CTN_PRICE_API_ADDRESS", "https://stg.pingextest.eu/marketdata/instruments/btc_usd/history")
 
 	// end defaults
 

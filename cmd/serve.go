@@ -54,7 +54,7 @@ func serve(cmd *cobra.Command, args []string) {
 	}()
 
 	select {
-	case <-time.After(time.Minute * 10):
+	case <-time.After(time.Second * 10):
 		log.Info("Add price process started...")
 		controller.AddPrice()
 	}
